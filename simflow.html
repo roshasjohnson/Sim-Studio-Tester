@@ -1,16 +1,790 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
-    <title>SimFlow</title>
-    <link rel="stylesheet" href="styles.css" />
-    <body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BusinessOnBot AI Flow Tester</title>
+    <link rel="icon" type="image/jpeg" href="boblogo.jpg">
+    <meta property="og:image" content="boblogo.jpg">
+
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background: #000000;
+            color: #d9d9d9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        #settings-btn {
+            background: none;
+            border: none;
+            color: #d9d9d9;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        #settings-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Chat Container */
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 1rem;
+            animation: fadeIn 0.3s ease;
+            max-width: 80%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .ai {
+            align-self: flex-start;
+        }
+
+        .avatar {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin: 0 0.5rem;
+        }
+
+        .user .avatar {
+            background: #0183fd;
+            color: #fff;
+        }
+
+        .ai .avatar {
+            background: #ffaa00;
+            color: #d9d9d9;
+        }
+
+        .bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .user .bubble {
+            background: rgba(29, 155, 240, 0.15);
+            color: #fff;
+        }
+
+        .ai .bubble {
+            background: #15202b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d9d9d9;
+        }
+
+        .timestamp {
+            font-size: 0.7rem;
+            color: #8899a6;
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+
+        .ai .timestamp {
+            text-align: left;
+        }
+
+        /* Typing Indicator */
+        #typing-indicator {
+            display: none;
+            align-self: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #8899a6;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.2s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Input Area */
+        #input-area {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            display: flex;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        #message-input {
+            flex: 1;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d9d9d9;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            resize: none;
+            font-size: 1rem;
+            line-height: 1.5;
+            overflow: hidden;
+            min-height: 40px;
+            max-height: 200px;
+        }
+
+        #message-input:focus {
+            outline: none;
+            border-color: #1d9bf0;
+        }
+
+        #send-btn {
+            background: #1d9bf0;
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            margin-left: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        #send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Settings Modal */
+        #settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        #settings-content {
+            background: #15202b;
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #settings-content h2 {
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d9d9d9;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1d9bf0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        #save-settings {
+            background: #1d9bf0;
+            color: #fff;
+            border: none;
+        }
+
+        #cancel-settings {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d9d9d9;
+        }
+
+        /* Empty State */
+        #empty-state {
+            text-align: center;
+            color: #8899a6;
+            margin: auto;
+            font-size: 1rem;
+        }
+
+        /* Formatting Styles */
+        .bubble p {
+            margin-bottom: 0.5rem;
+        }
+
+        .bubble strong {
+            font-weight: bold;
+        }
+
+        .bubble em {
+            font-style: italic;
+        }
+
+        .bubble code {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+        }
+
+        .bubble pre {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+
+        .bubble ul, .bubble ol {
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Star background canvas */
+        #star-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Ensure main content is above the canvas */
+        header, #chat-container, #input-area, #settings-modal {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hide input area when modal is open */
+        body.modal-open #input-area {
+            opacity: 0.2;
+            pointer-events: none;
+            filter: blur(2px);
+            transition: opacity 0.2s, filter 0.2s;
+        }
+        /* Optionally, also blur chat container for full effect */
+        body.modal-open #chat-container {
+            opacity: 0.5;
+            filter: blur(1px);
+            pointer-events: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 0.75rem;
+            }
+
+            #chat-container {
+                padding: 0.75rem;
+            }
+
+            #input-area {
+                padding: 0.75rem;
+            }
+
+            .message {
+                max-width: 95%;
+            }
+
+            #send-btn {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            #settings-btn {
+                font-size: 1rem;
+            }
+
+            .avatar {
+                width: 1.5rem;
+                height: 1.5rem;
+                font-size: 0.7rem;
+            }
+
+            .bubble {
+                padding: 0.5rem 0.75rem;
+            }
+
+            #message-input {
+                font-size: 0.9rem;
+            }
+
+            #send-btn {
+                padding: 0.5rem 1rem;
+                margin-left: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="star-bg"></canvas>
+    <header>
         
-    </body>
-    
-  </head>
+        <h1> <strong>SimFlow</strong> </h1>
+
+        <button id="settings-btn"><strong>Settings</strong> ⚙️</button>
+    </header>
+    <div id="chat-container">
+        <div id="empty-state">Start a conversation by typing a message below.</div>
+    </div>
+    <div id="input-area">
+        <textarea id="message-input" placeholder="Type your message..."></textarea>
+        <button id="send-btn">Send</button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal">
+        <div id="settings-content">
+            <h2>Settings</h2>
+            <div class="form-group">
+                <label for="api-url">API URL</label>
+                <input type="text" id="api-url" value="">
+            </div>
+            <div class="form-group">
+                <label for="api-key">API Key (required)</label>
+                <input type="password" id="api-key">
+            </div>
+            <div class="form-group">
+                <label for="sender-id">Sender ID</label>
+                <input type="text" id="sender-id" value="user_001">
+            </div>
+            <div class="form-group">
+                <label for="account-id">Account ID</label>
+                <input type="text" id="account-id" value="account_001">
+            </div>
+            <div class="form-group">
+                <label for="ticket-id">Ticket ID</label>
+                <input type="text" id="ticket-id" value="ticket_001">
+            </div>
+            <div class="form-group">
+                <label for="channel">Channel</label>
+                <input type="text" id="channel" value="web">
+            </div>
+            <div class="modal-buttons">
+                <button id="cancel-settings" class="btn">Cancel</button>
+                <button id="save-settings" class="btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Star background logic
+        (function() {
+            const canvas = document.getElementById('star-bg');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+            const STAR_COLORS = ['#fff', '#ffe9c4', '#d4fbff', '#ffd6fa', '#c4ffd4', '#f7f7a1'];
+            const STAR_COUNT = 120;
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                drawStars();
+            }
+
+            function randomBetween(a, b) {
+                return a + Math.random() * (b - a);
+            }
+
+            function createStars() {
+                stars = [];
+                for (let i = 0; i < STAR_COUNT; i++) {
+                    stars.push({
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * window.innerHeight,
+                        r: randomBetween(0.5, 2.2),
+                        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)]
+                    });
+                }
+            }
+
+            function drawStars() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (const star of stars) {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.r, 0, 2 * Math.PI);
+                    ctx.fillStyle = star.color;
+                    ctx.globalAlpha = randomBetween(0.7, 1);
+                    ctx.shadowColor = star.color;
+                    ctx.shadowBlur = 6;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            function animate() {
+                // Optional: twinkle effect
+                for (let star of stars) {
+                    star.r += (Math.random() - 0.5) * 0.07;
+                    if (star.r < 0.5) star.r = 0.5;
+                    if (star.r > 2.2) star.r = 2.2;
+                }
+                drawStars();
+                requestAnimationFrame(animate);
+            }
+
+            function initStars() {
+                resizeCanvas();
+                createStars();
+                drawStars();
+            }
+
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                createStars();
+            });
+
+            initStars();
+            animate();
+        })();
+
+        // Configuration variables
+        let apiUrl = localStorage.getItem('apiUrl') || '';
+        let apiKey = localStorage.getItem('apiKey') || '';
+        let senderId = localStorage.getItem('senderId') || '';
+        let accountId = 'account_001';
+        let ticketId = 'ticket_001';
+        let channel = 'web';
+
+        // Conversation memory
+        let memory = [];
+
+        // UI elements
+        const chatContainer = document.getElementById('chat-container');
+        const emptyState = document.getElementById('empty-state');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const saveSettings = document.getElementById('save-settings');
+        const cancelSettings = document.getElementById('cancel-settings');
+
+        // Typing indicator
+        const typingIndicator = document.createElement('div');
+        typingIndicator.id = 'typing-indicator';
+        typingIndicator.classList.add('message', 'ai');
+        typingIndicator.innerHTML = `
+            <div class="avatar">AI</div>
+            <div class="bubble">
+                <div style="display: flex; align-items: center;">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        `;
+        chatContainer.appendChild(typingIndicator);
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = `${this.scrollHeight}px`;
+        });
+
+        // Enter key handling
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Send button
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Settings modal
+        settingsBtn.addEventListener('click', openSettings);
+        cancelSettings.addEventListener('click', closeSettings);
+        saveSettings.addEventListener('click', saveAndCloseSettings);
+        settingsModal.addEventListener('click', function(e) {
+            if (e.target === settingsModal) closeSettings();
+        });
+
+        function openSettings() {
+            document.getElementById('api-url').value = apiUrl;
+            document.getElementById('api-key').value = apiKey;
+            document.getElementById('sender-id').value = senderId;
+            document.getElementById('account-id').value = accountId;
+            document.getElementById('ticket-id').value = ticketId;
+            document.getElementById('channel').value = channel;
+            settingsModal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+        }
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+        }
+
+        function saveAndCloseSettings() {
+            const newApiUrl = document.getElementById('api-url').value.trim();
+            const newApiKey = document.getElementById('api-key').value.trim();
+
+            if (!newApiKey) {
+                alert('API Key is required.');
+                return;
+            }
+            apiUrl = newApiUrl;
+            apiKey = newApiKey;
+            senderId = document.getElementById('sender-id').value.trim();
+            accountId = document.getElementById('account-id').value.trim();
+            ticketId = document.getElementById('ticket-id').value.trim();
+            channel = document.getElementById('channel').value.trim();
+
+       
+            localStorage.setItem('apiUrl', apiUrl);
+            localStorage.setItem('apiKey', apiKey);
+            localStorage.setItem('senderId', senderId);
+
+            closeSettings();
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !apiKey) {
+                if (!apiKey) alert('Please set your API Key in settings.');
+                return;
+            }
+
+            // Add user message
+            addMessage('user', message);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            sendBtn.disabled = true;
+            typingIndicator.style.display = 'block';
+            scrollToBottom();
+
+            // Update memory
+            memory.push({ role: 'User', message });
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message,
+                        sender_id: senderId,
+                        account_id: accountId,
+                        ticket_id: ticketId,
+                        channel,
+                        memory
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiMessage = data.output?.content || 'No response'; // Assuming response has 'output.content' field
+                addMessage('ai', aiMessage);
+                memory.push({ role: 'AI', message: aiMessage });
+            } catch (error) {
+                addMessage('ai', `Error: ${error.message}`);
+            } finally {
+                typingIndicator.style.display = 'none';
+                sendBtn.disabled = false;
+                scrollToBottom();
+            }
+        }
+
+        function addMessage(type, text) {
+            if (emptyState) emptyState.style.display = 'none';
+
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', type);
+
+            const avatarText = type === 'user' ? 'U' : 'AI';
+            const formattedText = formatText(text);
+
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            messageDiv.innerHTML = `
+                <div class="avatar">${avatarText}</div>
+                <div class="bubble">${formattedText}</div>
+            `;
+            const timestampDiv = document.createElement('div');
+            timestampDiv.classList.add('timestamp');
+            timestampDiv.textContent = timestamp;
+            messageDiv.appendChild(timestampDiv);
+
+            chatContainer.insertBefore(messageDiv, typingIndicator);
+            scrollToBottom();
+        }
+
+        function formatText(text) {
+            // Escape HTML
+            text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            // Bold
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            // Italic
+            text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // Inline code
+            text = text.replace(/`(.*?)`/g, '<code>$1</code>');
+
+            // Code blocks
+            text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+            // Lists and paragraphs
+            const lines = text.split('\n');
+            let inUl = false;
+            let inOl = false;
+            let output = [];
+            lines.forEach(line => {
+                if (line.startsWith('- ') || line.startsWith('* ')) {
+                    if (!inUl) {
+                        output.push('<ul>');
+                        inUl = true;
+                    }
+                    if (inOl) {
+                        output.push('</ol>');
+                        inOl = false;
+                    }
+                    output.push(`<li>${line.substring(2)}</li>`);
+                } else if (/^\d+\. /.test(line)) {
+                    if (!inOl) {
+                        output.push('<ol>');
+                        inOl = true;
+                    }
+                    if (inUl) {
+                        output.push('</ul>');
+                        inUl = false;
+                    }
+                    output.push(`<li>${line.replace(/^\d+\. /, '')}</li>`);
+                } else {
+                    if (inUl) {
+                        output.push('</ul>');
+                        inUl = false;
+                    }
+                    if (inOl) {
+                        output.push('</ol>');
+                        inOl = false;
+                    }
+                    if (line.trim()) {
+                        output.push(`<p>${line}</p>`);
+                    } else {
+                        output.push('<br>');
+                    }
+                }
+            });
+            if (inUl) output.push('</ul>');
+            if (inOl) output.push('</ol>');
+
+            return output.join('');
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
+</body>
 </html>
